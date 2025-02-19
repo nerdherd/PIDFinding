@@ -55,7 +55,7 @@ public class RobotContainer {
     // Wrist
     driverController.bumperRight()
       .whileTrue(findingKS.rampVoltage())
-      .onFalse(findingKS.disable(voltage));
+      .onFalse(findingKS.disable(10)); //angle difference of 10
     driverController.bumperLeft()
       .onTrue(findingKS.getKS());
 
