@@ -8,6 +8,7 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.FindingKS;
 import frc.robot.util.Controller;
 
 import com.ctre.phoenix6.controls.Follower;
@@ -42,6 +43,7 @@ public class RobotContainer {
   public final VoltageOut voltageRequest = new VoltageOut(0);
   public final NeutralOut brakeRequest = new NeutralOut();
   public double voltage = .4;
+  public FindingKS findingKS = new FindingKS(2, 8);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -51,6 +53,12 @@ public class RobotContainer {
 
   private void configureBindings() {
     // Wrist
+    driverController.bumperRight()
+      .whileTrue(findingKS.rampVoltage())
+      .onFalse(findingKS.disable(voltage));
+    driverController.bumperLeft()
+      .onTrue(findingKS.getKS());
+
     driverController.triggerRight()
       .whileTrue(
         Commands.run(
