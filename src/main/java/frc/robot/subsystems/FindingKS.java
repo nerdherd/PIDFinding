@@ -84,7 +84,7 @@ public class FindingKS extends SubsystemBase{
             return;
         }
 
-        motor1.setControl(voltageRequest);
+        motor1.setControl(voltageRequest.withOutput(voltage));
         if(motor2 != null) motor2.setControl(followerRequest);
 
         SmartDashboard.putNumber(instance + ": kS Voltage", voltage);
