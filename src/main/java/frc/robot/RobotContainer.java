@@ -10,6 +10,7 @@ import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.util.Controller;
 
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -34,7 +35,9 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final Controller driverController = new Controller(0);
   
-  public final TalonFX motor = new TalonFX(54);
+  public final TalonFX motor = new TalonFX(8);
+  public final TalonFX motor2 = new TalonFX(9);
+  public final Follower follower = new Follower(8, true);
   public final Pigeon2 pigeon = new Pigeon2(2);
   public final VoltageOut voltageRequest = new VoltageOut(0);
   public final NeutralOut brakeRequest = new NeutralOut();
@@ -62,6 +65,20 @@ public class RobotContainer {
           Commands.runOnce(() -> voltage = 0)
         )
       );
+
+      driverController.triggerLeft()
+      .whileTrue(
+        Commands.run(
+          () -> {
+            motor.setControl(voltageRequest.withOutput(2));
+            motor.setControl(follower);
+          }
+        )
+      )
+      .onFalse(Commands.parallel(
+        Commands.runOnce(() -> motor.setControl(brakeRequest)),
+        Commands.runOnce(() -> motor.setControl(brakeRequest))
+      ));
   }
 
   /**
