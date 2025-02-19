@@ -17,6 +17,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -37,7 +38,7 @@ public class RobotContainer {
   public final Pigeon2 pigeon = new Pigeon2(2);
   public final VoltageOut voltageRequest = new VoltageOut(0);
   public final NeutralOut brakeRequest = new NeutralOut();
-  public double voltage = 0;
+  public double voltage = .4;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -48,13 +49,18 @@ public class RobotContainer {
   private void configureBindings() {
     driverController.triggerRight()
       .whileTrue(
-        Commands.parallel(
-          Commands.run(() -> motor.setControl(voltageRequest.withOutput(voltage))),
-          Commands.run(() -> voltage += 0.1 / 50.0)
+        Commands.run(
+            () -> {
+              voltage += 0.2 / 50.0;
+              motor.setControl(voltageRequest.withOutput(voltage));
+            }
         )
       )
       .onFalse(
-        Commands.runOnce(() -> motor.setControl(brakeRequest))
+        Commands.sequence(
+          Commands.runOnce(() -> motor.setControl(brakeRequest)),
+          Commands.runOnce(() -> voltage = 0)
+        )
       );
   }
 
