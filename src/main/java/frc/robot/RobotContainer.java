@@ -37,7 +37,7 @@ public class RobotContainer {
   
   public final TalonFX motor = new TalonFX(8);
   public final TalonFX motor2 = new TalonFX(9);
-  public final Follower follower = new Follower(8, true);
+  public final Follower follower = new Follower(8, false);
   public final Pigeon2 pigeon = new Pigeon2(2);
   public final VoltageOut voltageRequest = new VoltageOut(0);
   public final NeutralOut brakeRequest = new NeutralOut();
@@ -70,14 +70,31 @@ public class RobotContainer {
       .whileTrue(
         Commands.run(
           () -> {
+            voltage += 0.2 / 50.0;
             motor.setControl(voltageRequest.withOutput(2));
-            motor.setControl(follower);
+            motor2.setControl(follower.withOpposeMasterDirection(false));
           }
         )
       )
       .onFalse(Commands.parallel(
         Commands.runOnce(() -> motor.setControl(brakeRequest)),
-        Commands.runOnce(() -> motor.setControl(brakeRequest))
+        Commands.runOnce(() -> motor2.setControl(brakeRequest)),
+        Commands.runOnce(() -> voltage = 0)
+      ));
+      
+      driverController.bumperRight()
+      .whileTrue(
+        Commands.run(
+          () -> {
+            voltage += 0.2 / 50.0;
+            motor.setControl(voltageRequest.withOutput(voltage));
+            motor2.setControl(follower.withOpposeMasterDirection(true));
+          }
+      ))
+      .onFalse(Commands.parallel(
+        Commands.runOnce(() -> motor.setControl(brakeRequest)),
+        Commands.runOnce(() -> motor2.setControl(brakeRequest)),
+        Commands.runOnce(() -> voltage = 0)
       ));
   }
 
