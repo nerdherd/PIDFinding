@@ -50,6 +50,7 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
+    // Wrist
     driverController.triggerRight()
       .whileTrue(
         Commands.run(
@@ -66,6 +67,7 @@ public class RobotContainer {
         )
       );
 
+      // Elevator
       driverController.triggerLeft()
       .whileTrue(
         Commands.run(
@@ -82,6 +84,7 @@ public class RobotContainer {
         Commands.runOnce(() -> voltage = 0)
       ));
       
+      // Pivot
       driverController.bumperRight()
       .whileTrue(
         Commands.run(
