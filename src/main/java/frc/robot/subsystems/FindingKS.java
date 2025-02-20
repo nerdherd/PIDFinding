@@ -86,7 +86,6 @@ public class FindingKS extends SubsystemBase{
 
         motor1.setControl(voltageRequest.withOutput(voltage));
         if(motor2 != null) motor2.setControl(followerRequest);
-
         SmartDashboard.putNumber(instance + ": kS Voltage", voltage);
         SmartDashboard.putNumber(instance + ": kS Supply Current", motor1.getSupplyCurrent().getValueAsDouble() + (motor2 != null ? motor2.getSupplyCurrent().getValueAsDouble() : 0.0));
         if(usingPigeon) SmartDashboard.putNumber(instance + ": kS Angle", pigeon.getRoll().getValueAsDouble());

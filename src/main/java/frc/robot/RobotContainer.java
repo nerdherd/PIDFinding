@@ -17,6 +17,9 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -42,15 +45,18 @@ public class RobotContainer {
   public final Pigeon2 pigeon = new Pigeon2(2);
   public final VoltageOut voltageRequest = new VoltageOut(0);
   public final NeutralOut brakeRequest = new NeutralOut();
+  public final TalonFX wrist = new TalonFX(54);
   public double voltage = .4;
   public FindingKS findingKS = new FindingKS(2, 8);
+
+  public final PIDController pidcontroller = new PIDController(0.1, 0.0, 0.0);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
   }
-
+  
   private void configureBindings() {
     // Wrist
     driverController.bumperRight()
@@ -58,13 +64,23 @@ public class RobotContainer {
       .onFalse(findingKS.disable(10)); //angle difference of 10
     driverController.bumperLeft()
       .onTrue(findingKS.getKS());
-
+    driverController.buttonUp()
+      .whileTrue(
+        Commands.run(() -> wrist.set(pidcontroller.calculate(pigeon.getPitch().getValueAsDouble(), 4.0)))
+      )
+      .onFalse(
+        Commands.runOnce(() -> wrist.set(0.0))
+        );
+      
+    //Ramp
     driverController.triggerRight()
       .whileTrue(
         Commands.run(
             () -> {
-              voltage += 0.2 / 50.0;
+              voltage += 0.2 / 30.0;
               motor.setControl(voltageRequest.withOutput(voltage));
+              motor2.setControl(follower.withOpposeMasterDirection(true));
+              SmartDashboard.putNumber("Ramp Voltage: ", voltage);
             }
         )
       )
@@ -75,14 +91,13 @@ public class RobotContainer {
         )
       );
 
-      // Elevator
+      // Constant
       driverController.triggerLeft()
       .whileTrue(
         Commands.run(
           () -> {
-            voltage += 0.2 / 50.0;
-            motor.setControl(voltageRequest.withOutput(2));
-            motor2.setControl(follower.withOpposeMasterDirection(false));
+            motor.setControl(voltageRequest.withOutput(1.5));
+            motor2.setControl(follower.withOpposeMasterDirection(true));
           }
         )
       )
@@ -99,7 +114,7 @@ public class RobotContainer {
           () -> {
             voltage += 0.2 / 50.0;
             motor.setControl(voltageRequest.withOutput(voltage));
-            motor2.setControl(follower.withOpposeMasterDirection(true));
+            motor2.setControl(follower.withOpposeMasterDirection(false));
           }
       ))
       .onFalse(Commands.parallel(
@@ -107,6 +122,10 @@ public class RobotContainer {
         Commands.runOnce(() -> motor2.setControl(brakeRequest)),
         Commands.runOnce(() -> voltage = 0)
       ));
+  }
+
+  public void periodic() {
+
   }
 
   /**
