@@ -11,14 +11,22 @@ import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.FindingKS;
 import frc.robot.util.Controller;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -39,6 +47,7 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final Controller driverController = new Controller(0);
   
+  public final DCMotorSim simulation = new DCMotorSim(LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.001, 10.0), DCMotor.getKrakenX60Foc(1));
   public final TalonFX motor = new TalonFX(8);
   public final TalonFX motor2 = new TalonFX(9);
   public final Follower follower = new Follower(8, false);
@@ -46,38 +55,63 @@ public class RobotContainer {
   public final VoltageOut voltageRequest = new VoltageOut(0);
   public final NeutralOut brakeRequest = new NeutralOut();
   public final TalonFX wrist = new TalonFX(54);
+  public final MotionMagicVoltage motionMagicController = new MotionMagicVoltage(0.0);
   public double voltage = .4;
-  public FindingKS findingKS = new FindingKS(2, 8);
-
-  public final PIDController pidcontroller = new PIDController(0.1, 0.0, 0.0);
+  public FindingKS findingKS = new FindingKS(2, 54);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
+    TalonFXConfigurator configurator = wrist.getConfigurator();
+    TalonFXConfiguration configuration = new TalonFXConfiguration();
+    configurator.refresh(configuration);
+    configuration.Slot0.kP = 0.01;
+    configuration.Slot0.kI = 0.0;
+    configuration.Slot0.kD = 0.0;
+    configuration.Slot0.kG = 0.0;
+    configuration.Slot0.kS = 0.0;
+    configuration.Slot0.kV = 0.0;
+    configuration.Slot0.kA = 0.0;
+    configurator.apply(configuration);
+    // motionMagicController.FeedForward = ;
+    wrist.setPosition(0.0);
     configureBindings();
   }
   
   private void configureBindings() {
     // Wrist
+    // driverController.bumperRight()
+    //   .whileTrue(findingKS.rampVoltage())
+    //   .onFalse(findingKS.disable(10)); //angle difference of 10
+    // driverController.bumperLeft()
+    //   .onTrue(findingKS.reset());
+    // driverController.buttonUp()
+    //   .whileTrue(
+    //     Commands.runOnce(() -> wrist.setControl(motionMagicController.withPosition(-0.5)))
+    //   )
+    //   .onFalse(
+    //     Commands.runOnce(() -> wrist.setControl(brakeRequest))
+    //     );
     driverController.bumperRight()
-      .whileTrue(findingKS.rampVoltage())
-      .onFalse(findingKS.disable(10)); //angle difference of 10
+      .whileTrue(Commands.run(() -> {
+        voltage -= 0.2 / 50.0;
+        // voltage = -1.928;
+      }));
     driverController.bumperLeft()
-      .onTrue(findingKS.getKS());
-    driverController.buttonUp()
-      .whileTrue(
-        Commands.run(() -> wrist.set(pidcontroller.calculate(pigeon.getPitch().getValueAsDouble(), 4.0)))
-      )
-      .onFalse(
-        Commands.runOnce(() -> wrist.set(0.0))
-        );
+      .whileTrue(Commands.run(() -> {
+        wrist.setControl(voltageRequest.withOutput(voltage));
+      }));
+    driverController.buttonDown()
+      .onTrue(Commands.runOnce(() -> {
+        voltage = 0;
+      }));
       
     //Ramp
     driverController.triggerRight()
       .whileTrue(
         Commands.run(
             () -> {
-              voltage += 0.2 / 30.0;
+              voltage -= 0.2 / 30.0;
               motor.setControl(voltageRequest.withOutput(voltage));
               motor2.setControl(follower.withOpposeMasterDirection(true));
               SmartDashboard.putNumber("Ramp Voltage: ", voltage);
@@ -92,7 +126,7 @@ public class RobotContainer {
       );
 
       // Constant
-      driverController.triggerLeft()
+      driverController.buttonLeft()
       .whileTrue(
         Commands.run(
           () -> {
@@ -106,25 +140,40 @@ public class RobotContainer {
         Commands.runOnce(() -> motor2.setControl(brakeRequest)),
         Commands.runOnce(() -> voltage = 0)
       ));
-      
-      // Pivot
-      driverController.bumperRight()
+      driverController.buttonRight()
       .whileTrue(
         Commands.run(
           () -> {
-            voltage += 0.2 / 50.0;
-            motor.setControl(voltageRequest.withOutput(voltage));
-            motor2.setControl(follower.withOpposeMasterDirection(false));
+            motor.setControl(voltageRequest.withOutput(-1.5));
+            motor2.setControl(follower.withOpposeMasterDirection(true));
           }
-      ))
+        )
+      )
       .onFalse(Commands.parallel(
         Commands.runOnce(() -> motor.setControl(brakeRequest)),
         Commands.runOnce(() -> motor2.setControl(brakeRequest)),
         Commands.runOnce(() -> voltage = 0)
       ));
+      
+      // Pivot
+      // driverController.bumperRight()
+      // .whileTrue(
+      //   Commands.run(
+      //     () -> {
+      //       voltage += 0.2 / 50.0;
+      //       motor.setControl(voltageRequest.withOutput(voltage));
+      //       motor2.setControl(follower.withOpposeMasterDirection(false));
+      //     }
+      // ))
+      // .onFalse(Commands.parallel(
+      //   Commands.runOnce(() -> motor.setControl(brakeRequest)),
+      //   Commands.runOnce(() -> motor2.setControl(brakeRequest)),
+      //   Commands.runOnce(() -> voltage = 0)
+      // ));
   }
 
-  public void periodic() {
+  public void simulationPeriodic() {
+    TalonFXSimState wrist_sim = wrist.getSimState();
 
   }
 

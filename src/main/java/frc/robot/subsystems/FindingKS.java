@@ -48,7 +48,7 @@ public class FindingKS extends SubsystemBase{
     public Command rampVoltage() {
         return Commands.sequence(
             Commands.runOnce(() -> enabled = true),
-            Commands.run(() -> voltage += 0.2 / 50.0)
+            Commands.run(() -> voltage -= 0.2 / 50.0)
         );
     }
     public Command disable(double differenceToDetect) {
@@ -68,8 +68,12 @@ public class FindingKS extends SubsystemBase{
         }
 
         return Commands.runOnce(() -> {
-            voltage = 0;
             enabled = false;
+        });
+    }
+    public Command reset() {
+        return Commands.runOnce(() -> {
+            voltage = 0;
         });
     }
 
