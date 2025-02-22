@@ -11,6 +11,13 @@ import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.FindingKS;
 import frc.robot.util.Controller;
 
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
+
+import java.nio.channels.WritableByteChannel;
+
+import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
@@ -25,6 +32,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -33,6 +42,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.subsystems.SysIDTest;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -48,14 +59,15 @@ public class RobotContainer {
   private final Controller driverController = new Controller(0);
   
   public final DCMotorSim simulation = new DCMotorSim(LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.001, 10.0), DCMotor.getKrakenX60Foc(1));
-  public final TalonFX motor = new TalonFX(8);
-  public final TalonFX motor2 = new TalonFX(9);
+  public final TalonFX motor = new TalonFX(53);
+  public final TalonFX motor2 = new TalonFX(54);
   public final Follower follower = new Follower(8, false);
   public final Pigeon2 pigeon = new Pigeon2(2);
   public final VoltageOut voltageRequest = new VoltageOut(0);
   public final NeutralOut brakeRequest = new NeutralOut();
   public final TalonFX wrist = new TalonFX(54);
   public final MotionMagicVoltage motionMagicController = new MotionMagicVoltage(0.0);
+  private final SysIDTest systest = new SysIDTest(wrist);
   public double voltage = .4;
   public FindingKS findingKS = new FindingKS(2, 54);
 
@@ -74,9 +86,15 @@ public class RobotContainer {
     configuration.Slot0.kA = 0.0;
     configurator.apply(configuration);
     // motionMagicController.FeedForward = ;
-    wrist.setPosition(0.0);
-    configureBindings();
+    StatusCode status = SignalLogger.setPath("/u/logs"); // TODO create folder
+    if (!status.isOK()) {
+      DriverStation.reportWarning("UHEFHUSDUFHOHS: " + status.getDescription(), false);
+    }
+    DriverStation.reportWarning("KSJHGkhfdfjgsdfjkgksdhg", false);
+
+    configureSysIDBindings();
   }
+  
   
   private void configureBindings() {
     // Wrist
@@ -170,12 +188,27 @@ public class RobotContainer {
       //   Commands.runOnce(() -> motor2.setControl(brakeRequest)),
       //   Commands.runOnce(() -> voltage = 0)
       // ));
-  }
+    }
+    
+    /**
+     * up - rayquasi to
+     * down - rayquasi fro
+     * right - dynamike to
+     * left - dynamike fro
+     */
+    private void configureSysIDBindings() {
+      driverController.bumperLeft().onTrue(Commands.runOnce(SignalLogger::start));
+      driverController.bumperRight().onTrue(Commands.runOnce(SignalLogger::stop));
 
-  public void simulationPeriodic() {
-    TalonFXSimState wrist_sim = wrist.getSimState();
+      driverController.buttonUp().whileTrue(systest.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+      driverController.buttonDown().whileTrue(systest.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+      driverController.buttonRight().whileTrue(systest.sysIdDynamic(SysIdRoutine.Direction.kForward));
+      driverController.buttonLeft().whileTrue(systest.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    }
 
-  }
+    public void periodic() {
+      SignalLogger.writeDouble("AngularVelocity", pigeon.getAngularVelocityXDevice().getValueAsDouble(), "Seconds");
+    }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
