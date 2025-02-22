@@ -208,6 +208,7 @@ public class RobotContainer {
 
     public void periodic() {
       SignalLogger.writeDouble("AngularVelocity", pigeon.getAngularVelocityXDevice().getValueAsDouble(), "Seconds");
+      SignalLogger.writeDouble("Velocity", motor.getVelocity().getValueAsDouble(), "Seconds");
     }
 
   /**
