@@ -110,68 +110,69 @@ public class RobotContainer {
     //   .onFalse(
     //     Commands.runOnce(() -> wrist.setControl(brakeRequest))
     //     );
-    driverController.bumperRight()
-      .whileTrue(Commands.run(() -> {
-        voltage -= 0.2 / 50.0;
-        // voltage = -1.928;
-      }));
-    driverController.bumperLeft()
-      .whileTrue(Commands.run(() -> {
-        wrist.setControl(voltageRequest.withOutput(voltage));
-      }));
-    driverController.buttonDown()
-      .onTrue(Commands.runOnce(() -> {
-        voltage = 0;
-      }));
+    
+    // driverController.bumperRight()
+    //   .whileTrue(Commands.run(() -> {
+    //     voltage -= 0.2 / 50.0;
+    //     // voltage = -1.928;
+    //   }));
+    // driverController.bumperLeft()
+    //   .whileTrue(Commands.run(() -> {
+    //     wrist.setControl(voltageRequest.withOutput(voltage));
+    //   }));
+    // driverController.buttonDown()
+    //   .onTrue(Commands.runOnce(() -> {
+    //     voltage = 0;
+    //   }));
       
-    //Ramp
-    driverController.triggerRight()
-      .whileTrue(
-        Commands.run(
-            () -> {
-              voltage -= 0.2 / 30.0;
-              motor.setControl(voltageRequest.withOutput(voltage));
-              motor2.setControl(follower.withOpposeMasterDirection(true));
-              SmartDashboard.putNumber("Ramp Voltage: ", voltage);
-            }
-        )
-      )
-      .onFalse(
-        Commands.sequence(
-          Commands.runOnce(() -> motor.setControl(brakeRequest)),
-          Commands.runOnce(() -> voltage = 0)
-        )
-      );
+    // //Ramp
+    // driverController.triggerRight()
+    //   .whileTrue(
+    //     Commands.run(
+    //         () -> {
+    //           voltage -= 0.2 / 30.0;
+    //           motor.setControl(voltageRequest.withOutput(voltage));
+    //           motor2.setControl(follower.withOpposeMasterDirection(true));
+    //           SmartDashboard.putNumber("Ramp Voltage: ", voltage);
+    //         }
+    //     )
+    //   )
+    //   .onFalse(
+    //     Commands.sequence(
+    //       Commands.runOnce(() -> motor.setControl(brakeRequest)),
+    //       Commands.runOnce(() -> voltage = 0)
+    //     )
+    //   );
 
-      // Constant
-      driverController.buttonLeft()
-      .whileTrue(
-        Commands.run(
-          () -> {
-            motor.setControl(voltageRequest.withOutput(1.5));
-            motor2.setControl(follower.withOpposeMasterDirection(true));
-          }
-        )
-      )
-      .onFalse(Commands.parallel(
-        Commands.runOnce(() -> motor.setControl(brakeRequest)),
-        Commands.runOnce(() -> motor2.setControl(brakeRequest)),
-        Commands.runOnce(() -> voltage = 0)
-      ));
-      driverController.buttonRight()
-      .whileTrue(
-        Commands.run(
-          () -> {
-            motor.setControl(voltageRequest.withOutput(-1.5));
-            motor2.setControl(follower.withOpposeMasterDirection(true));
-          }
-        )
-      )
-      .onFalse(Commands.parallel(
-        Commands.runOnce(() -> motor.setControl(brakeRequest)),
-        Commands.runOnce(() -> motor2.setControl(brakeRequest)),
-        Commands.runOnce(() -> voltage = 0)
-      ));
+    //   // Constant
+    //   driverController.buttonLeft()
+    //   .whileTrue(
+    //     Commands.run(
+    //       () -> {
+    //         motor.setControl(voltageRequest.withOutput(1.5));
+    //         motor2.setControl(follower.withOpposeMasterDirection(true));
+    //       }
+    //     )
+    //   )
+    //   .onFalse(Commands.parallel(
+    //     Commands.runOnce(() -> motor.setControl(brakeRequest)),
+    //     Commands.runOnce(() -> motor2.setControl(brakeRequest)),
+    //     Commands.runOnce(() -> voltage = 0)
+    //   ));
+    //   driverController.buttonRight()
+    //   .whileTrue(
+    //     Commands.run(
+    //       () -> {
+    //         motor.setControl(voltageRequest.withOutput(-1.5));
+    //         motor2.setControl(follower.withOpposeMasterDirection(true));
+    //       }
+    //     )
+    //   )
+    //   .onFalse(Commands.parallel(
+    //     Commands.runOnce(() -> motor.setControl(brakeRequest)),
+    //     Commands.runOnce(() -> motor2.setControl(brakeRequest)),
+    //     Commands.runOnce(() -> voltage = 0)
+    //   ));
       
       // Pivot
       // driverController.bumperRight()
