@@ -35,6 +35,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -59,9 +60,9 @@ public class RobotContainer {
   private final Controller driverController = new Controller(0);
   
   public final DCMotorSim simulation = new DCMotorSim(LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.001, 10.0), DCMotor.getKrakenX60Foc(1));
-  public final TalonFX motor = new TalonFX(53);
-  public final TalonFX motor2 = new TalonFX(54);
-  public final Follower follower = new Follower(8, false);
+  public final TalonFX motor = new TalonFX(8);
+  public final TalonFX motor2 = new TalonFX(9);
+  public final Follower follower = new Follower(8, true);
   public final Pigeon2 pigeon = new Pigeon2(2);
   public final VoltageOut voltageRequest = new VoltageOut(0);
   public final NeutralOut brakeRequest = new NeutralOut();
@@ -92,104 +93,43 @@ public class RobotContainer {
     }
     DriverStation.reportWarning("KSJHGkhfdfjgsdfjkgksdhg", false);
 
-    configureSysIDBindings();
+    configureBindings();
   }
   
   
   private void configureBindings() {
-    // Wrist
-    // driverController.bumperRight()
-    //   .whileTrue(findingKS.rampVoltage())
-    //   .onFalse(findingKS.disable(10)); //angle difference of 10
-    // driverController.bumperLeft()
-    //   .onTrue(findingKS.reset());
-    // driverController.buttonUp()
-    //   .whileTrue(
-    //     Commands.runOnce(() -> wrist.setControl(motionMagicController.withPosition(-0.5)))
-    //   )
-    //   .onFalse(
-    //     Commands.runOnce(() -> wrist.setControl(brakeRequest))
-    //     );
-    
-    // driverController.bumperRight()
-    //   .whileTrue(Commands.run(() -> {
-    //     voltage -= 0.2 / 50.0;
-    //     // voltage = -1.928;
-    //   }));
-    // driverController.bumperLeft()
-    //   .whileTrue(Commands.run(() -> {
-    //     wrist.setControl(voltageRequest.withOutput(voltage));
-    //   }));
-    // driverController.buttonDown()
-    //   .onTrue(Commands.runOnce(() -> {
-    //     voltage = 0;
-    //   }));
-      
-    // //Ramp
-    // driverController.triggerRight()
-    //   .whileTrue(
-    //     Commands.run(
-    //         () -> {
-    //           voltage -= 0.2 / 30.0;
-    //           motor.setControl(voltageRequest.withOutput(voltage));
-    //           motor2.setControl(follower.withOpposeMasterDirection(true));
-    //           SmartDashboard.putNumber("Ramp Voltage: ", voltage);
-    //         }
-    //     )
-    //   )
-    //   .onFalse(
-    //     Commands.sequence(
-    //       Commands.runOnce(() -> motor.setControl(brakeRequest)),
-    //       Commands.runOnce(() -> voltage = 0)
-    //     )
-    //   );
-
-    //   // Constant
-    //   driverController.buttonLeft()
-    //   .whileTrue(
-    //     Commands.run(
-    //       () -> {
-    //         motor.setControl(voltageRequest.withOutput(1.5));
-    //         motor2.setControl(follower.withOpposeMasterDirection(true));
-    //       }
-    //     )
-    //   )
-    //   .onFalse(Commands.parallel(
-    //     Commands.runOnce(() -> motor.setControl(brakeRequest)),
-    //     Commands.runOnce(() -> motor2.setControl(brakeRequest)),
-    //     Commands.runOnce(() -> voltage = 0)
-    //   ));
-    //   driverController.buttonRight()
-    //   .whileTrue(
-    //     Commands.run(
-    //       () -> {
-    //         motor.setControl(voltageRequest.withOutput(-1.5));
-    //         motor2.setControl(follower.withOpposeMasterDirection(true));
-    //       }
-    //     )
-    //   )
-    //   .onFalse(Commands.parallel(
-    //     Commands.runOnce(() -> motor.setControl(brakeRequest)),
-    //     Commands.runOnce(() -> motor2.setControl(brakeRequest)),
-    //     Commands.runOnce(() -> voltage = 0)
-    //   ));
-      
-      // Pivot
-      // driverController.bumperRight()
-      // .whileTrue(
-      //   Commands.run(
-      //     () -> {
-      //       voltage += 0.2 / 50.0;
-      //       motor.setControl(voltageRequest.withOutput(voltage));
-      //       motor2.setControl(follower.withOpposeMasterDirection(false));
-      //     }
-      // ))
-      // .onFalse(Commands.parallel(
-      //   Commands.runOnce(() -> motor.setControl(brakeRequest)),
-      //   Commands.runOnce(() -> motor2.setControl(brakeRequest)),
-      //   Commands.runOnce(() -> voltage = 0)
-      // ));
-    }
+    driverController.buttonDown()
+      .onTrue(Commands.runOnce(() -> {
+        motor.setControl(voltageRequest);
+        motor2.setControl(follower);
+      }))
+      .onFalse(Commands.runOnce(() -> {
+        motor.setControl(brakeRequest);
+        motor2.setControl(brakeRequest);
+      }));
+    driverController.buttonUp()
+      .onTrue(Commands.runOnce(() -> {
+        voltageRequest.Output = 0.0;
+      }));
+    driverController.triggerRight()
+      .whileTrue(Commands.run(() -> {
+        voltageRequest.Output += 0.1 / 50.0;
+      }));
+    driverController.triggerLeft()
+      .whileTrue(Commands.run(() -> {
+        voltageRequest.Output -= 0.1 / 50.0;
+      }));
+    driverController.bumperRight()
+      .whileTrue(Commands.run(() -> {
+        voltageRequest.Output += 0.01 / 50.0;
+      }));
+    driverController.bumperLeft()
+      .whileTrue(Commands.run(() -> {
+        voltageRequest.Output -= 0.01 / 50.0;
+      }));
+      ShuffleboardTab tab = Shuffleboard.getTab("Elevator");
+      tab.addDouble("Elevator Voltage", () -> voltageRequest.Output);
+  }
     
     /**
      * up - rayquasi to
