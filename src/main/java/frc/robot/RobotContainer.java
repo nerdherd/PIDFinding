@@ -111,19 +111,22 @@ public class RobotContainer {
     //     Commands.runOnce(() -> wrist.setControl(brakeRequest))
     //     );
     
-    // driverController.bumperRight()
-    //   .whileTrue(Commands.run(() -> {
-    //     voltage -= 0.2 / 50.0;
-    //     // voltage = -1.928;
-    //   }));
-    // driverController.bumperLeft()
-    //   .whileTrue(Commands.run(() -> {
-    //     wrist.setControl(voltageRequest.withOutput(voltage));
-    //   }));
-    // driverController.buttonDown()
-    //   .onTrue(Commands.runOnce(() -> {
-    //     voltage = 0;
-    //   }));
+    driverController.bumperRight()
+      .whileTrue(Commands.run(() -> {
+        voltage -= 0.2 / 50.0;
+      }));
+    driverController.bumperLeft()
+      .whileTrue(Commands.run(() -> {
+        voltage += 0.2 / 50.0;
+      }));
+    driverController.buttonRight()
+      .whileTrue(Commands.run(() -> {
+        wrist.setControl(voltageRequest.withOutput(voltage));
+      }));
+    driverController.buttonDown()
+      .onTrue(Commands.runOnce(() -> {
+        voltage = 0;
+      }));
       
     // //Ramp
     // driverController.triggerRight()
