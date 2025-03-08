@@ -92,7 +92,7 @@ public class RobotContainer {
     }
     DriverStation.reportWarning("KSJHGkhfdfjgsdfjkgksdhg", false);
 
-    configureSysIDBindings();
+    configureBindings();
   }
   
   
@@ -201,7 +201,7 @@ public class RobotContainer {
      * left - dynamike fro
      */
     private void configureSysIDBindings() {
-      driverController.bumperLeft().onTrue(Commands.runOnce(SignalLogger::start));
+     driverController.bumperLeft().onTrue(Commands.runOnce(SignalLogger::start));
       driverController.bumperRight().onTrue(Commands.runOnce(SignalLogger::stop));
 
       driverController.buttonUp().whileTrue(systest.sysIdQuasistatic(SysIdRoutine.Direction.kForward));

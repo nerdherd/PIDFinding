@@ -48,11 +48,12 @@ public class Robot extends TimedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
-    SmartDashboard.putNumber("Voltage", m_robotContainer.voltage);
+    SmartDashboard.putNumber("Desired Voltage", m_robotContainer.voltage);
     // SmartDashboard.putNumber("Velocity", m_robotContainer.motor.getVelocity().getValueAsDouble());
     SmartDashboard.putNumber("Rotor Velocity", m_robotContainer.motor.getRotorVelocity().getValueAsDouble());
+    SmartDashboard.putNumber("Actual Voltage", m_robotContainer.motor.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber("Supply Current", m_robotContainer.motor.getSupplyCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("Position", m_robotContainer.motor.getPosition().getValueAsDouble());
+    SmartDashboard.putNumber("Actual Position", m_robotContainer.motor.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("Velocity",m_robotContainer.motor.getVelocity().getValueAsDouble());
     CommandScheduler.getInstance().run();
   }
