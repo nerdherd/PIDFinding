@@ -56,11 +56,11 @@ public class RobotContainer {
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final Controller driverController = new Controller(0);
+  private final Controller driverController = new Controller(0, false);
   
   public final DCMotorSim simulation = new DCMotorSim(LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.001, 10.0), DCMotor.getKrakenX60Foc(1));
-  public final TalonFX motor = new TalonFX(53);
-  public final TalonFX motor2 = new TalonFX(54);
+  public final TalonFX motor = new TalonFX(8);
+  public final TalonFX motor2 = new TalonFX(9);
   public final Follower follower = new Follower(8, false);
   public final Pigeon2 pigeon = new Pigeon2(2);
   public final VoltageOut voltageRequest = new VoltageOut(0);
@@ -111,22 +111,22 @@ public class RobotContainer {
     //     Commands.runOnce(() -> wrist.setControl(brakeRequest))
     //     );
     
-    driverController.bumperRight()
-      .whileTrue(Commands.run(() -> {
-        voltage -= 0.2 / 50.0;
-      }));
-    driverController.bumperLeft()
-      .whileTrue(Commands.run(() -> {
-        voltage += 0.2 / 50.0;
-      }));
-    driverController.buttonRight()
-      .whileTrue(Commands.run(() -> {
-        wrist.setControl(voltageRequest.withOutput(voltage));
-      }));
-    driverController.buttonDown()
-      .onTrue(Commands.runOnce(() -> {
-        voltage = 0;
-      }));
+    // driverController.bumperRight()
+    //   .whileTrue(Commands.run(() -> {
+    //     voltage -= 0.2 / 50.0;
+    //   }));
+    // driverController.bumperLeft()
+    //   .whileTrue(Commands.run(() -> {
+    //     voltage += 0.2 / 50.0;
+    //   }));
+    // driverController.buttonRight()
+    //   .whileTrue(Commands.run(() -> {
+    //     wrist.setControl(voltageRequest.withOutput(voltage));
+    //   }));
+    // driverController.buttonDown()
+    //   .onTrue(Commands.runOnce(() -> {
+    //     voltage = 0;
+    //   }));
       
     // //Ramp
     // driverController.triggerRight()
@@ -178,20 +178,20 @@ public class RobotContainer {
     //   ));
       
       // Pivot
-      // driverController.bumperRight()
-      // .whileTrue(
-      //   Commands.run(
-      //     () -> {
-      //       voltage += 0.2 / 50.0;
-      //       motor.setControl(voltageRequest.withOutput(voltage));
-      //       motor2.setControl(follower.withOpposeMasterDirection(false));
-      //     }
-      // ))
-      // .onFalse(Commands.parallel(
-      //   Commands.runOnce(() -> motor.setControl(brakeRequest)),
-      //   Commands.runOnce(() -> motor2.setControl(brakeRequest)),
-      //   Commands.runOnce(() -> voltage = 0)
-      // ));
+      driverController.bumperRight()
+      .whileTrue(
+        Commands.run(
+          () -> {
+            voltage += 0.2 / 50.0;
+            motor.setControl(voltageRequest.withOutput(voltage));
+            motor2.setControl(follower.withOpposeMasterDirection(true));
+          }
+      ))
+      .onFalse(Commands.parallel(
+        Commands.runOnce(() -> motor.setControl(brakeRequest)),
+        Commands.runOnce(() -> motor2.setControl(brakeRequest)),
+        Commands.runOnce(() -> voltage = 0)
+      ));
     }
     
     /**
